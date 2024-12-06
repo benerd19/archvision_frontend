@@ -8,7 +8,7 @@ import logosvg from '@/icons/Logo.vue'
             <h2 class="header__title">Archvision</h2>
         </div>
         <div class="header__buttons-wrapper">
-            <el-button size="large">Войти</el-button>
+            <el-button size="large" @click="$router.push('/authorization')">Войти</el-button>
         </div>
     </header>
 </template>
