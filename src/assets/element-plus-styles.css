@@ -1,0 +1,25 @@
+.el-button {
+    height: auto;
+}
+
+.el-button:hover {
+    border-color: var(--main-color);
+    background-color: var(--main-color);
+    color: white;
+}
+
+.el-button > span {
+    font-family: 'Work Sans', sans-serif;
+}
+
+.el-card__header {
+    padding: 0;
+}
+
+.el-collapse-item__header {
+    padding: 48px 0;
+    font-size: 20px;
+    color: var(--main-color);
+    font-weight: 700;
+    font-family: 'Work Sans', sans-serif;
+}
