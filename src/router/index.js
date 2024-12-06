@@ -6,6 +6,11 @@ const routes = [
         name: 'main',
         component: () => import('@/pages/Main.vue'),
     },
+    {
+        path: '/authorization',
+        name: 'authorization',
+        component: () => import('@/pages/Authorization.vue'),
+    },
 ]
 
 const router = createRouter({

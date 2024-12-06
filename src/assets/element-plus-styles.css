@@ -23,3 +23,7 @@
     font-weight: 700;
     font-family: 'Work Sans', sans-serif;
 }
+
+.el-input__wrapper.is-focus {
+    box-shadow: 0 0 0 1px var(--main-color) inset;
+}
