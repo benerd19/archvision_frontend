@@ -6,11 +6,14 @@ import About from '@/components/main/About.vue'
 import Statistics from '@/components/main/Statistics.vue'
 import Team from '@/components/main/Team.vue'
 import { useIntersectionObserver } from '@vueuse/core'
+import { ElNotification } from 'element-plus'
 
-const projects = ref()
+const projectsBlock = ref()
 const commentsBlock = ref()
 
 const isCommentsVisible = ref(false)
+
+const dialogVisible = ref(false)
 
 const isProjectsVisible = ref(false)
 
@@ -22,11 +25,11 @@ useIntersectionObserver(commentsBlock, ([{ isIntersecting }], observerElement) =
 })
 
 useIntersectionObserver(
-    projects,
+    projectsBlock,
     ([{ isIntersecting }], observerElement) => {
         if (isIntersecting) {
             isProjectsVisible.value = true
-            observerElement.unobserve(projects.value)
+            observerElement.unobserve(projectsBlock.value)
         }
     },
     { threshold: 0.4 }
@@ -125,16 +128,86 @@ const questions = [
 ]
 
 const accordion = ref([])
+
+const projectsOption = ref([
+    {
+        label: 'Project 1',
+        value: 'Project 1',
+    },
+    {
+        label: 'Project 2',
+        value: 'Project 2',
+    },
+])
+
+const formError = ref('')
+
+const applicationForm = reactive({
+    project: '',
+    description: '',
+})
+
+function submitForm() {
+    try {
+        formError.value = ''
+        if (applicationForm.project === '') throw new Error('Выберите проект')
+        dialogVisible.value = false
+        console.log('submitForm')
+        ElNotification({
+            title: 'Успешно',
+            message: 'Заявка принята',
+            type: 'success',
+        })
+        applicationForm.project = ''
+        applicationForm.description = ''
+    } catch (e) {
+        formError.value = e.message
+    }
+}
+
+function handleClose(done) {
+    applicationForm.project = ''
+    applicationForm.description = ''
+    formError.value = ''
+    done()
+}
 </script>
 <template>
     <Header />
     <main class="main">
+        <el-dialog
+            v-model="dialogVisible"
+            title="Заполните заявку"
+            width="500"
+            align-center
+            center
+            modal-class="modal__title"
+            :before-close="handleClose"
+            class="modal"
+        >
+            <form action="submit" @submit.prevent="submitForm" class="modal__form">
+                <span class="modal__form-label">Выберите проект</span>
+                <el-select v-model="applicationForm.project" placeholder="Выберите проект" size="large">
+                    <el-option v-for="item in projectsOption" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <span class="modal__form-label">Оставьте краткое описание</span>
+                <el-input
+                    v-model="applicationForm.description"
+                    class="main__questions-textarea"
+                    :rows="6"
+                    type="textarea"
+                    placeholder="Описание..."
+                />
+                <span v-if="formError" class="modal__form-error">{{ formError }}</span>
+                <el-button native-type="submit" class="modal__form-btn">Отправить</el-button>
+            </form>
+        </el-dialog>
         <el-backtop :bottom="60" class="main__backtop" />
         <h1 class="main__title">ArchVision – создаем пространство, вдохновленное вашими идеями.</h1>
-        <el-button class="main__button">Оставить заявку</el-button>
+        <el-button class="main__button" @click="dialogVisible = true">Оставить заявку</el-button>
         <img src="../assets/images/main-picture.jpg" alt="main-picture" class="main__picture" />
         <About />
-        <div class="main__projects" ref="projects" :class="{ 'main__projects--visible': isProjectsVisible }">
+        <div class="main__projects" ref="projectsBlock" :class="{ 'main__projects--visible': isProjectsVisible }">
             <h2 class="main__title">Наши проекты</h2>
             <p class="main__description">
                 Каждый проект ArchVision – это уникальная история, где дизайн и функциональность соединяются в гармоничное целое. Мы работаем над
@@ -489,6 +562,37 @@ const accordion = ref([])
 
     &__footer {
         margin-top: 100px;
+    }
+}
+
+.modal {
+    padding: 100px;
+
+    &__form {
+        margin-top: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        font-family: 'Work Sans', sans-serif;
+    }
+
+    &__form-label {
+        font-size: 16px;
+        color: var(--main-color);
+        font-weight: 400;
+        font-family: 'Work Sans', sans-serif;
+    }
+
+    &__form-btn {
+        align-self: center;
+    }
+
+    &__form-error {
+        color: red;
+        align-self: center;
+        margin: 0;
+        font-size: 12px;
+        font-family: 'Work Sans', sans-serif;
     }
 }
 </style>

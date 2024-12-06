@@ -5,12 +5,18 @@ import { useIntersectionObserver } from '@vueuse/core'
 const team = ref()
 const isVisible = ref(false)
 
-useIntersectionObserver(team, ([{ isIntersecting }], observerElement) => {
-    if (isIntersecting) {
-        isVisible.value = true
-        observerElement.unobserve(team.value)
+useIntersectionObserver(
+    team,
+    ([{ isIntersecting }], observerElement) => {
+        if (isIntersecting) {
+            isVisible.value = true
+            observerElement.unobserve(team.value)
+        }
+    },
+    {
+        threshold: 0.6,
     }
-})
+)
 
 const teamMembers = [
     {
@@ -34,38 +40,45 @@ const teamMembers = [
 ]
 </script>
 <template>
-    <h2 class="team__title">Наша команда – ваша уверенность в результате</h2>
-    <el-carousel
-        height="480px"
-        :interval="3000"
-        arrow="never"
-        class="team__carousel"
-        :class="{ 'team__carousel--visible': isVisible }"
-        indicator-position="none"
-        type="card"
-        ref="team"
-    >
-        <el-carousel-item v-for="item in teamMembers" :key="item.id" style="height: auto">
-            <div class="team__card">
-                <img src="../../assets/images/architector-man-croped.jpg" alt="architector-photo" class="team__card-photo" />
-                <div class="team__card-info">
-                    <h3 class="team__card-name">Иван Петров</h3>
-                    <p class="team__card-text">
-                        Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.
-                    </p>
+    <div class="team__wrapper" ref="team">
+        <h2 class="team__title">Наша команда – ваша уверенность в результате</h2>
+        <el-carousel
+            height="480px"
+            :interval="3000"
+            arrow="never"
+            class="team__carousel"
+            :class="{ 'team__carousel--visible': isVisible }"
+            indicator-position="none"
+            type="card"
+        >
+            <el-carousel-item v-for="item in teamMembers" :key="item.id" style="height: auto">
+                <div class="team__card">
+                    <img src="../../assets/images/architector-man-croped.jpg" alt="architector-photo" class="team__card-photo" />
+                    <div class="team__card-info">
+                        <h3 class="team__card-name">Иван Петров</h3>
+                        <p class="team__card-text">
+                            Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </el-carousel-item>
-    </el-carousel>
+            </el-carousel-item>
+        </el-carousel>
 
-    <p class="team__description" :class="{ 'team__description--visible': isVisible }">
-        Мы гордимся нашими архитекторами – это специалисты с богатым опытом, тонким чувством стиля и страстью к созданию уникальных проектов. Каждый
-        из них привносит в наши работы свои идеи, превращая ваши мечты в реальность. Познакомьтесь с профессионалами, которые сделают ваш проект
-        исключительным.
-    </p>
+        <p class="team__description" :class="{ 'team__description--visible': isVisible }">
+            Мы гордимся нашими архитекторами – это специалисты с богатым опытом, тонким чувством стиля и страстью к созданию уникальных проектов.
+            Каждый из них привносит в наши работы свои идеи, превращая ваши мечты в реальность. Познакомьтесь с профессионалами, которые сделают ваш
+            проект исключительным.
+        </p>
+    </div>
 </template>
 <style scoped lang="scss">
 .team {
+    &__wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
     &__photo-wrapper {
         display: flex;
         justify-content: center;
