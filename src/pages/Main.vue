@@ -17,12 +17,16 @@ const dialogVisible = ref(false)
 
 const isProjectsVisible = ref(false)
 
-useIntersectionObserver(commentsBlock, ([{ isIntersecting }], observerElement) => {
-    if (isIntersecting) {
-        isCommentsVisible.value = true
-        observerElement.unobserve(commentsBlock.value)
-    }
-})
+useIntersectionObserver(
+    commentsBlock,
+    ([{ isIntersecting }], observerElement) => {
+        if (isIntersecting) {
+            isCommentsVisible.value = true
+            observerElement.unobserve(commentsBlock.value)
+        }
+    },
+    { threshold: 0.4 }
+)
 
 useIntersectionObserver(
     projectsBlock,
@@ -205,7 +209,8 @@ function handleClose(done) {
         <el-backtop :bottom="60" class="main__backtop" />
         <h1 class="main__title">ArchVision – создаем пространство, вдохновленное вашими идеями.</h1>
         <el-button class="main__button" @click="dialogVisible = true">Оставить заявку</el-button>
-        <img src="../assets/images/main-picture.jpg" alt="main-picture" class="main__picture" />
+        <!-- TODO: Есть проблемы с отрисовкой картинки, анимация нижнего блока не всегда срабатывает -->
+        <img src="../assets/images/main-picture.webp" alt="main-picture" class="main__picture" />
         <About />
         <div class="main__projects" ref="projectsBlock" :class="{ 'main__projects--visible': isProjectsVisible }">
             <h2 class="main__title">Наши проекты</h2>

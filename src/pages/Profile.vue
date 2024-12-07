@@ -4,7 +4,7 @@ import Trash from '@/icons/Trash.vue'
 import Edit from '@/icons/Edit.vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
-const tabValue = ref('')
+const tabValue = ref('Profile')
 const user = reactive({
     name: 'Иван',
     surname: 'Иванов',
@@ -18,6 +18,47 @@ const editValue = reactive({
     name: user.name,
     surname: user.surname,
 })
+
+const isTasksEdit = ref(false)
+const taskEditId = ref(null)
+
+const taskValue = reactive({
+    type: '',
+    description: '',
+})
+
+const taskProjects = reactive([
+    {
+        label: 'Project 1',
+        value: 'Project 1',
+    },
+    {
+        label: 'Project 2',
+        value: 'Project 2',
+    },
+    {
+        label: 'Project 3',
+        value: 'Project 3',
+    },
+])
+
+const tasks = reactive([
+    {
+        type: 'Project 1',
+        description: 'Описание проекта 1',
+        status: 'На рассмотрении',
+    },
+    {
+        type: 'Project 2',
+        description: 'Описание проекта 2',
+        status: 'На рассмотрении',
+    },
+    {
+        type: 'Project 3',
+        description: 'Описание проекта 3',
+        status: 'На рассмотрении',
+    },
+])
 
 function deleteAccount() {
     ElMessageBox.confirm('Вы действительно хотите удалить аккаунт?', 'Удаление аккаунта', {
@@ -58,6 +99,7 @@ function discardChange() {
 }
 
 function saveChanges() {
+    if (!editValue.name || !editValue.surname) return
     user.name = editValue.name
     user.surname = editValue.surname
     isEdit.value = false
@@ -67,6 +109,41 @@ function changeToEdit() {
     isEdit.value = true
     editValue.name = user.name
     editValue.surname = user.surname
+}
+
+function deleteTask(id) {
+    ElMessageBox.confirm('Вы действительно хотите удалить заявку', 'Удаление заявки', {
+        confirmButtonText: 'Да',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+        confirmButtonClass: 'el-button--danger',
+        cancelButtonClass: 'btn-main',
+    })
+        .then(() => {
+            tasks.splice(id, 1)
+            console.log('Удаленаие заявки')
+        })
+        .catch(() => {
+            console.log('Отмена удаления заявки')
+        })
+}
+
+function editTask(id) {
+    taskEditId.value = id
+    taskValue.type = tasks[id].type
+    taskValue.description = tasks[id].description
+    isTasksEdit.value = true
+}
+
+function saveTask() {
+    tasks[taskEditId.value].type = taskValue.type
+    tasks[taskEditId.value].description = taskValue.description
+    taskEditId.value = null
+    isTasksEdit.value = false
+}
+function canselTask() {
+    taskEditId.value = null
+    isTasksEdit.value = false
 }
 </script>
 <template>
@@ -101,6 +178,33 @@ function changeToEdit() {
                 </div>
                 <div class="profile__tasks" v-if="tabValue === 'Requests'">
                     <h2 class="profile__tasks-title">Мои заявки</h2>
+                    <div class="profile__tasks-list" v-for="(task, index) in tasks" :key="index">
+                        <div class="profile__tasks-info">
+                            <h3 class="profile__tasks-header">Тип проекта</h3>
+                            <el-select v-model="taskValue.type" placeholder="Выберите проект" size="large" v-if="isTasksEdit && taskEditId === index">
+                                <el-option v-for="(item, index) in taskProjects" :key="index" :label="item.label" :value="item.value" />
+                            </el-select>
+                            <span v-else>{{ task.type }}</span>
+                            <h3 class="profile__tasks-header">Описание</h3>
+                            <el-input
+                                v-model="taskValue.description"
+                                placeholder="Описание"
+                                type="textarea"
+                                v-if="isTasksEdit && taskEditId === index"
+                            />
+                            <span v-else>{{ task.description }}</span>
+                            <h3 class="profile__tasks-header">Статус</h3>
+                            <span>{{ task.status }}</span>
+                            <div class="profile__tasks-btns" v-if="isTasksEdit && taskEditId === index">
+                                <el-button class="btn-main" @click="saveTask">Сохранить</el-button>
+                                <el-button class="btn-main" @click="canselTask">Отмена</el-button>
+                            </div>
+                        </div>
+                        <div class="profile__tasks-svg" v-if="taskEditId !== index">
+                            <Edit class="profile__tasks-edit" @click="editTask(index)" />
+                            <Trash class="profile__tasks-trash" @click="deleteTask(index)" />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -123,7 +227,8 @@ function changeToEdit() {
         width: 100%;
     }
 
-    &__user-name {
+    &__user-name,
+    &__tasks-title {
         text-align: center;
         font-size: 32px;
         font-weight: 600;
@@ -159,6 +264,49 @@ function changeToEdit() {
         width: 24px;
         height: 24px;
         cursor: pointer;
+    }
+
+    &__tasks {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+
+    &__tasks-list {
+        max-width: 640px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 24px;
+        gap: 12px;
+        border: 1px solid var(--main-color);
+        border-radius: 4px;
+    }
+
+    &__tasks-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    &__tasks-header {
+        margin: 0;
+        font-weight: 600;
+        color: var(--main-color);
+        font-size: 20px;
+    }
+
+    &__tasks-edit,
+    &__tasks-trash {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+    }
+
+    &__tasks-svg {
+        display: flex;
+        gap: 4px;
     }
 }
 </style>

@@ -14,7 +14,7 @@ useIntersectionObserver(
             observerElement.unobserve(animatedElement.value)
         }
     },
-    { threshold: 0.4 }
+    { threshold: 0.6 }
 )
 </script>
 <template>
