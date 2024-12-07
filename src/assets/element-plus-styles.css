@@ -2,11 +2,11 @@
     height: auto;
 }
 
-.el-button:hover {
+/* .el-button:hover {
     border-color: var(--main-color);
     background-color: var(--main-color);
     color: white;
-}
+} */
 
 .el-button > span {
     font-family: 'Work Sans', sans-serif;
@@ -49,6 +49,17 @@
     font-family: 'Work Sans', sans-serif;
 }
 
+.btn-main {
+    font-family: 'Work Sans', sans-serif;
+}
+
+.btn-main:hover {
+    background-color: var(--main-color);
+    color: var(--white);
+    border-color: var(--main-color);
+}
+
 :root {
     --el-color-primary: #474747;
+    --el-color-danger-light-9: white;
 }

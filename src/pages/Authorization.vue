@@ -67,6 +67,12 @@ async function submitForm() {
 
     &__form-button {
         align-self: center;
+
+        &:hover {
+            background-color: var(--main-color);
+            color: var(--white);
+            border-color: var(--main-color);
+        }
     }
 
     &__link-wrapper {

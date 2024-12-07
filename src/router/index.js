@@ -16,6 +16,11 @@ const routes = [
         name: 'registration',
         component: () => import('@/pages/Registration.vue'),
     },
+    {
+        path: '/profile',
+        name: 'profile',
+        component: () => import('@/pages/Profile.vue'),
+    },
 ]
 
 const router = createRouter({

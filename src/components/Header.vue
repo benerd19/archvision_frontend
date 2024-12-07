@@ -8,7 +8,7 @@ import logosvg from '@/icons/Logo.vue'
             <h2 class="header__title">Archvision</h2>
         </div>
         <div class="header__buttons-wrapper">
-            <el-button size="large" @click="$router.push('/authorization')">Войти</el-button>
+            <el-button @click="$router.push('/authorization')" class="header__button" size="large">Войти</el-button>
         </div>
     </header>
 </template>
@@ -54,6 +54,12 @@ import logosvg from '@/icons/Logo.vue'
     &__buttons-wrapper {
         display: flex;
         gap: 8px;
+    }
+
+    &__button:hover {
+        background-color: var(--main-color);
+        color: var(--white);
+        border-color: var(--main-color);
     }
 }
 </style>

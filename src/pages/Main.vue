@@ -554,6 +554,12 @@ function handleClose(done) {
     &__questions-button {
         align-self: center;
         padding: 12px 32px;
+
+        &:hover {
+            background-color: var(--main-color);
+            color: var(--white);
+            border-color: var(--main-color);
+        }
     }
 
     &__questions-title {
@@ -585,6 +591,12 @@ function handleClose(done) {
 
     &__form-btn {
         align-self: center;
+
+        &:hover {
+            background-color: var(--main-color);
+            color: var(--white);
+            border-color: var(--main-color);
+        }
     }
 
     &__form-error {
