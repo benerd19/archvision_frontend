@@ -1,5 +1,11 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElNotification } from 'element-plus'
+
+const router = useRouter()
+
+const server = import.meta.env.VITE_SERVER_IP
 
 const errorMessage = ref('')
 
@@ -7,15 +13,47 @@ const form = reactive({
     email: '',
     password: '',
 })
+
 async function submitForm() {
     try {
+        errorMessage.value = ''
+
         if (!form.email || !form.password) {
             throw new Error('Заполните все поля')
         }
+
+        const response = await fetch(`${server}/api/users/auth`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(form),
+        })
+
+        if (!response.ok) {
+            throw new Error('Что-то пошло не так')
+        }
+
+        const data = await response.json()
+
+        localStorage.setItem('token', data.token)
+
+        router.push('/')
     } catch (error) {
         errorMessage.value = error.message
     }
 }
+
+onMounted(() => {
+    if (localStorage.getItem('create')) {
+        localStorage.removeItem('create')
+        ElNotification({
+            title: 'Успешно',
+            message: 'Вы успешно зарегистрировались',
+            type: 'success',
+        })
+    }
+})
 </script>
 <template>
     <div class="auth__wrapper">

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 
 const team = ref()
@@ -19,25 +19,42 @@ useIntersectionObserver(
 )
 
 const teamMembers = [
-    {
-        id: 1,
-        name: 'Иван Петров',
-        photo: '../../assets/images/architector-man-croped.jpg',
-        text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
-    },
-    {
-        id: 2,
-        name: 'Иван Петров',
-        photo: '../../assets/images/architector-man-croped.jpg',
-        text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
-    },
-    {
-        id: 3,
-        name: 'Иван Петров',
-        photo: '../../assets/images/architector-man-croped.jpg',
-        text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
-    },
+    // {
+    //     id: 1,
+    //     name: 'Иван Петров',
+    //     photo: '../../assets/images/architector-man-croped.jpg',
+    //     text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
+    // },
+    // {
+    //     id: 2,
+    //     name: 'Иван Петров',
+    //     photo: '../../assets/images/architector-man-croped.jpg',
+    //     text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
+    // },
+    // {
+    //     id: 3,
+    //     name: 'Иван Петров',
+    //     photo: '../../assets/images/architector-man-croped.jpg',
+    //     text: 'Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.',
+    // },
 ]
+
+onMounted(async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/architects`)
+        const data = await response.json()
+        teamMembers.push(
+            ...data.map((item) => ({
+                id: item.id,
+                name: `${item.surname} ${item.name}`,
+                photo: `${import.meta.env.VITE_SERVER_IP}/api/architects/photos/url/${item.photo}`,
+                text: item.information,
+            }))
+        )
+    } catch (e) {
+        console.log(e)
+    }
+})
 </script>
 <template>
     <div class="team__wrapper" ref="team">
@@ -53,11 +70,11 @@ const teamMembers = [
         >
             <el-carousel-item v-for="item in teamMembers" :key="item.id" style="height: auto">
                 <div class="team__card">
-                    <img src="../../assets/images/architector-man-croped.jpg" alt="architector-photo" class="team__card-photo" />
+                    <img :src="item.photo" alt="architector-photo" class="team__card-photo" />
                     <div class="team__card-info">
-                        <h3 class="team__card-name">Иван Петров</h3>
+                        <h3 class="team__card-name">{{ item.name }}</h3>
                         <p class="team__card-text">
-                            Эксперт по проектированию общественных пространств. Обладатель нескольких международных наград за инновационные решения.
+                            {{ item.text }}
                         </p>
                     </div>
                 </div>
@@ -204,8 +221,5 @@ const teamMembers = [
         transition: all 1s ease-in-out;
         transform: translateY(0);
     }
-}
-
-.main__carousel {
 }
 </style>

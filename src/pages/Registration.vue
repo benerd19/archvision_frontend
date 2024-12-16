@@ -1,6 +1,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const server = import.meta.env.VITE_SERVER_IP
+
 const errorMessage = ref('')
 
 const form = reactive({
@@ -11,9 +17,26 @@ const form = reactive({
 })
 async function submitForm() {
     try {
+        errorMessage.value = ''
+
         if (!form.email || !form.password || !form.name || !form.surname) {
             throw new Error('Заполните все поля')
         }
+
+        const response = await fetch(`${server}/api/users/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(form),
+        })
+
+        if (!response.ok) {
+            throw new Error('Что-то пошло не так')
+        }
+        localStorage.setItem('create', true)
+
+        router.push('/authorization')
     } catch (error) {
         errorMessage.value = error.message
     }
@@ -25,9 +48,9 @@ async function submitForm() {
             <h2 class="registr__title">Регистрация</h2>
             <form action="submit" @submit.prevent="submitForm" class="registr__form">
                 <span class="registr__form-label">Фамилия</span>
-                <el-input v-model="form.surname" placeholder="Фамилия" type="email" />
+                <el-input v-model="form.surname" placeholder="Фамилия" />
                 <span class="registr__form-label">Имя</span>
-                <el-input v-model="form.name" placeholder="Имя" type="email" />
+                <el-input v-model="form.name" placeholder="Имя" />
                 <span class="registr__form-label">Электронная почта</span>
                 <el-input v-model="form.email" placeholder="E-mail" type="email" />
                 <span class="registr__form-label">Пароль</span>

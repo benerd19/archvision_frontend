@@ -1,15 +1,11 @@
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import Trash from '@/icons/Trash.vue'
 import Edit from '@/icons/Edit.vue'
 import { ElMessageBox } from 'element-plus'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 const tabValue = ref('Profile')
-const user = reactive({
-    name: 'Иван',
-    surname: 'Иванов',
-    email: 'eYH8M@example.com',
-})
+const user = reactive({})
 
 const router = useRouter()
 
@@ -27,38 +23,9 @@ const taskValue = reactive({
     description: '',
 })
 
-const taskProjects = reactive([
-    {
-        label: 'Project 1',
-        value: 'Project 1',
-    },
-    {
-        label: 'Project 2',
-        value: 'Project 2',
-    },
-    {
-        label: 'Project 3',
-        value: 'Project 3',
-    },
-])
+const taskProjects = reactive([])
 
-const tasks = reactive([
-    {
-        type: 'Project 1',
-        description: 'Описание проекта 1',
-        status: 'На рассмотрении',
-    },
-    {
-        type: 'Project 2',
-        description: 'Описание проекта 2',
-        status: 'На рассмотрении',
-    },
-    {
-        type: 'Project 3',
-        description: 'Описание проекта 3',
-        status: 'На рассмотрении',
-    },
-])
+const tasks = reactive([])
 
 function deleteAccount() {
     ElMessageBox.confirm('Вы действительно хотите удалить аккаунт?', 'Удаление аккаунта', {
@@ -68,9 +35,19 @@ function deleteAccount() {
         confirmButtonClass: 'el-button--danger',
         cancelButtonClass: 'btn-main',
     })
-        .then(() => {
-            console.log('Удаление аккаунта')
-            router.push('/')
+        .then(async () => {
+            try {
+                await fetch(`${import.meta.env.VITE_SERVER_IP}/api/users/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    },
+                })
+                localStorage.removeItem('token')
+                router.push('/')
+            } catch (e) {
+                console.log(e)
+            }
         })
         .catch(() => {
             console.log('Отмена удаления аккаунта')
@@ -86,7 +63,7 @@ function exitFromProfile() {
         cancelButtonClass: 'btn-main',
     })
         .then(() => {
-            console.log('Выход из аккаунта')
+            localStorage.removeItem('token')
             router.push('/')
         })
         .catch(() => {
@@ -98,11 +75,26 @@ function discardChange() {
     isEdit.value = false
 }
 
-function saveChanges() {
-    if (!editValue.name || !editValue.surname) return
-    user.name = editValue.name
-    user.surname = editValue.surname
-    isEdit.value = false
+async function saveChanges() {
+    try {
+        if (!editValue.name || !editValue.surname) return
+        user.name = editValue.name
+        user.surname = editValue.surname
+        isEdit.value = false
+        await fetch(`${import.meta.env.VITE_SERVER_IP}/api/users/update`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+                name: user.name,
+                surname: user.surname,
+            }),
+        })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 function changeToEdit() {
@@ -119,9 +111,19 @@ function deleteTask(id) {
         confirmButtonClass: 'el-button--danger',
         cancelButtonClass: 'btn-main',
     })
-        .then(() => {
+        .then(async () => {
+            console.log(id)
             tasks.splice(id, 1)
-            console.log('Удаленаие заявки')
+            const response = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/orders/cancel`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: 8,
+                }),
+            })
         })
         .catch(() => {
             console.log('Отмена удаления заявки')
@@ -129,22 +131,81 @@ function deleteTask(id) {
 }
 
 function editTask(id) {
+    console.log(id)
     taskEditId.value = id
-    taskValue.type = tasks[id].type
-    taskValue.description = tasks[id].description
+    const taskChoose = tasks.find((task) => task.id === id)
+    taskValue.type = taskChoose.type
+    taskValue.description = taskChoose.description
     isTasksEdit.value = true
 }
 
-function saveTask() {
-    tasks[taskEditId.value].type = taskValue.type
-    tasks[taskEditId.value].description = taskValue.description
-    taskEditId.value = null
-    isTasksEdit.value = false
+async function saveTask() {
+    try {
+        const index = tasks.findIndex((task) => task.id === taskEditId.value)
+        const response = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/orders/update`, {
+            method: 'PUT',
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: taskEditId.value,
+                project: taskValue.type,
+                description: taskValue.description,
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error('Что-то пошло не так')
+        }
+
+        const { type, description } = await response.json()
+
+        tasks[index].type = type
+        tasks[index].description = description
+
+        taskEditId.value = null
+        isTasksEdit.value = false
+    } catch (e) {
+        console.log(e)
+    }
 }
 function canselTask() {
     taskEditId.value = null
     isTasksEdit.value = false
 }
+
+onMounted(async () => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/users`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        })
+        const data = await response.json()
+        user.email = data.email
+        user.name = data.name
+        user.surname = data.surname
+
+        const responseTasks = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/orders/all`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+        })
+
+        if (!responseTasks.ok) {
+            throw new Error('Что-то пошло не так')
+        }
+        const dataTasks = await responseTasks.json()
+        tasks.push(...dataTasks)
+
+        const responseProjects = await fetch(`${import.meta.env.VITE_SERVER_IP}/api/projects/all`)
+        const dataProjects = await responseProjects.json()
+        taskProjects.push(...dataProjects.map((item) => ({ label: item.name, value: item.id })))
+    } catch (e) {
+        console.error(e.message)
+    }
+})
 </script>
 <template>
     <div class="profile__wrapper">
@@ -178,10 +239,16 @@ function canselTask() {
                 </div>
                 <div class="profile__tasks" v-if="tabValue === 'Requests'">
                     <h2 class="profile__tasks-title">Мои заявки</h2>
-                    <div class="profile__tasks-list" v-for="(task, index) in tasks" :key="index">
+                    <h3 v-if="tasks.length === 0">У вас пока нет заявок</h3>
+                    <div class="profile__tasks-list" v-for="task in tasks" :key="task.id" v-else>
                         <div class="profile__tasks-info">
                             <h3 class="profile__tasks-header">Тип проекта</h3>
-                            <el-select v-model="taskValue.type" placeholder="Выберите проект" size="large" v-if="isTasksEdit && taskEditId === index">
+                            <el-select
+                                v-model="taskValue.type"
+                                placeholder="Выберите проект"
+                                size="large"
+                                v-if="isTasksEdit && taskEditId === task.id"
+                            >
                                 <el-option v-for="(item, index) in taskProjects" :key="index" :label="item.label" :value="item.value" />
                             </el-select>
                             <span v-else>{{ task.type }}</span>
@@ -190,19 +257,27 @@ function canselTask() {
                                 v-model="taskValue.description"
                                 placeholder="Описание"
                                 type="textarea"
-                                v-if="isTasksEdit && taskEditId === index"
+                                v-if="isTasksEdit && taskEditId === task.id"
                             />
                             <span v-else>{{ task.description }}</span>
                             <h3 class="profile__tasks-header">Статус</h3>
                             <span>{{ task.status }}</span>
-                            <div class="profile__tasks-btns" v-if="isTasksEdit && taskEditId === index">
+                            <div class="profile__tasks-btns" v-if="isTasksEdit && taskEditId === task.id">
                                 <el-button class="btn-main" @click="saveTask">Сохранить</el-button>
                                 <el-button class="btn-main" @click="canselTask">Отмена</el-button>
                             </div>
                         </div>
-                        <div class="profile__tasks-svg" v-if="taskEditId !== index">
-                            <Edit class="profile__tasks-edit" @click="editTask(index)" />
-                            <Trash class="profile__tasks-trash" @click="deleteTask(index)" />
+                        <div class="profile__tasks-svg" v-if="taskEditId !== task.id">
+                            <Edit
+                                class="profile__tasks-edit"
+                                @click="editTask(task.id)"
+                                v-if="task.status === 'Создан' || task.status === 'Подтвержден' || task.status === 'В работе'"
+                            />
+                            <Trash
+                                class="profile__tasks-trash"
+                                @click="deleteTask(task.id)"
+                                v-if="task.status === 'Создан' || task.status === 'Подтвержден' || task.status === 'В работе'"
+                            />
                         </div>
                     </div>
                 </div>
@@ -288,6 +363,7 @@ function canselTask() {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        width: 100%;
     }
 
     &__tasks-header {

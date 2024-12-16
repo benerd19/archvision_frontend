@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 import About from '@/components/main/About.vue'
@@ -7,6 +7,8 @@ import Statistics from '@/components/main/Statistics.vue'
 import Team from '@/components/main/Team.vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import { ElNotification } from 'element-plus'
+
+const server = import.meta.env.VITE_SERVER_IP
 
 const projectsBlock = ref()
 const commentsBlock = ref()
@@ -47,46 +49,9 @@ const form = reactive({
 const linkCarouselToProjects =
     'https://img.freepik.com/free-photo/beautiful-shot-golcuk-puddles-karacasu-turkey_181624-45544.jpg?t=st=1733055141~exp=1733058741~hmac=7de07e69168243e3f93168dabfab49af90ce6f5d4805476ec683ffa53f91ecbc&w=1920'
 
-const carouselProjects = ref([
-    {
-        id: 1,
-        title: 'Project 1',
-        image: linkCarouselToProjects,
-    },
-    {
-        id: 2,
-        title: 'Project 2',
-        image: linkCarouselToProjects,
-    },
-    {
-        id: 3,
-        title: 'Project 3',
-        image: linkCarouselToProjects,
-    },
-    {
-        id: 4,
-        title: 'Project 4',
-        image: linkCarouselToProjects,
-    },
-])
+const carouselProjects = ref([])
 
-const comments = [
-    {
-        id: 1,
-        text: 'Я искал архитектурное бюро, которое могло бы воплотить мою идею современного дома, и ArchVision превзошли все ожидания. Работать с их командой было легко и приятно. Результат – дом моей мечты!',
-        author: 'Алексей Иванов',
-    },
-    {
-        id: 2,
-        text: 'ArchVision помогли мне с проектированием офиса. Эстетика, комфорт и эргономика – все на высшем уровне. Спасибо за профессионализм и внимание к деталям!',
-        author: 'Марина Кузнецова',
-    },
-    {
-        id: 3,
-        text: 'Когда мы задумали строительство загородного дома, мы обратились в ArchVision по рекомендации. Это было лучшее решение! Мы не только получили потрясающий проект, но и полностью реализовали его без изменений.',
-        author: 'Сергей Петров',
-    },
-]
+const comments = reactive([])
 
 const questions = [
     {
@@ -151,12 +116,23 @@ const applicationForm = reactive({
     description: '',
 })
 
-function submitForm() {
+async function submitForm() {
     try {
         formError.value = ''
+
         if (applicationForm.project === '') throw new Error('Выберите проект')
+
+        const response = await fetch(`${server}/api/orders/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify(applicationForm),
+        })
+        if (!response.ok) throw new Error('Что-то пошло не так')
+
         dialogVisible.value = false
-        console.log('submitForm')
         ElNotification({
             title: 'Успешно',
             message: 'Заявка принята',
@@ -175,6 +151,24 @@ function handleClose(done) {
     formError.value = ''
     done()
 }
+
+onMounted(async () => {
+    const responseProjects = await fetch(`${server}/api/projects/all`)
+    const dataProjects = await responseProjects.json()
+    projectsOption.value = dataProjects.map((item) => ({ label: item.name, value: item.id }))
+
+    console.log('dataProjects', dataProjects)
+    carouselProjects.value = dataProjects.map((item) => ({
+        id: item.id,
+        title: item.name,
+        image: `${server}/api/projects/photos/url/${item.photo[0]}`,
+    }))
+
+    const responseComments = await fetch(`${server}/api/comments`)
+    const dataComments = await responseComments.json()
+    comments.push(...dataComments.map((item) => ({ id: item.id, text: item.description, author: `${item.surname} ${item.name}` })))
+    console.log(comments)
+})
 </script>
 <template>
     <Header />
